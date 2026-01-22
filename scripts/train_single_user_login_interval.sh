@@ -105,10 +105,10 @@ python -u run.py \
   --patience "$PATIENCE" \
   --num_workers 0 \
   --gpu 0 \
-  --covariate \
   --use_norm \
   --nonautoregressive \
   --adaptation \
   --pretrain_model_path "$CKPT" \
   --output_root "$OUTPUT_ROOT" \
-  --user_id "$USER_ID"
+  --user_id "$USER_ID" \
+  --target_feature delta_min

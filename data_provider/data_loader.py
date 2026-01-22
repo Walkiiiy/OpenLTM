@@ -136,7 +136,7 @@ class LoginIntervalUser(Dataset):
         time_col='date',
         feature_cols=None,
         drop_cols='user_id',
-        append_target_channel=True,
+        append_target_channel=False,
     ):
         self.seq_len = size[0]
         self.input_token_len = size[1]
@@ -198,8 +198,21 @@ class LoginIntervalUser(Dataset):
                 raise ValueError(
                     f"feature_cols missing in data: {missing}")
 
+        if 'delta_min' in self.feature_cols:
+            feature_cols = ['delta_min'] + \
+                [c for c in self.feature_cols if c != 'delta_min']
+        else:
+            feature_cols = self.feature_cols
+        self.feature_cols = feature_cols
+
         x_all = df_raw[self.feature_cols].values.astype(np.float32)
-        y_all = df_raw[[self.target_col]].values.astype(np.float32)
+        if self.target_col in df_raw.columns:
+            y_all = df_raw[[self.target_col]].values.astype(np.float32)
+        elif 'delta_min' in df_raw.columns:
+            y_all = df_raw[['delta_min']].shift(-1).values.astype(np.float32)
+        else:
+            raise ValueError(
+                "Neither target_col nor delta_min present for label construction")
         if self.time_col in df_raw.columns:
             ts_all = df_raw[self.time_col].dt.strftime(
                 "%Y-%m-%d %H:%M:%S").values
@@ -225,6 +238,11 @@ class LoginIntervalUser(Dataset):
             target_zeros = np.zeros_like(y_all)
             x_all = np.concatenate([x_all, target_zeros], axis=1)
             y_all = np.concatenate([np.zeros_like(x_all[:, :-1]), y_all], axis=1)
+        else:
+            y_all = np.concatenate(
+                [y_all, np.zeros((len(y_all), x_all.shape[1] - 1), dtype=y_all.dtype)],
+                axis=1
+            )
 
         if self.set_type == 0:
             start, end = train_start, train_end

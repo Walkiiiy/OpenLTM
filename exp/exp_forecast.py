@@ -42,6 +42,12 @@ class Exp_Forecast(Exp_Basic):
         hit20 = np.mean(abs_err <= 20)
         mae = np.mean(abs_err)
         return hit20, mae
+
+    def _target_index(self, data_set):
+        if hasattr(data_set, "feature_cols") and data_set.feature_cols:
+            if self.args.target_feature in data_set.feature_cols:
+                return data_set.feature_cols.index(self.args.target_feature)
+        return 0
         
     def _build_model(self):
         if self.args.ddp:
@@ -125,7 +131,11 @@ class Exp_Forecast(Exp_Basic):
                     outputs = outputs[:, :, :]
                     batch_y = batch_y[:, :, :].to(self.device)
 
-                if self.args.covariate:
+                if self.args.data == 'LoginIntervalUser':
+                    target_idx = self._target_index(vali_data)
+                    outputs = outputs[:, :, target_idx]
+                    batch_y = batch_y[:, :, target_idx]
+                elif self.args.covariate:
                     if self.args.last_token:
                         outputs = outputs[:, -self.args.output_token_len:, -1]
                         batch_y = batch_y[:, -self.args.output_token_len:, -1]
@@ -169,9 +179,11 @@ class Exp_Forecast(Exp_Basic):
             preds = np.concatenate(preds, axis=0)
             trues = np.concatenate(trues, axis=0)
             if preds.ndim == 3:
-                preds = preds[:, :, -1]
+                target_idx = self._target_index(vali_data)
+                preds = preds[:, :, target_idx]
             if trues.ndim == 3:
-                trues = trues[:, :, -1]
+                target_idx = self._target_index(vali_data)
+                trues = trues[:, :, target_idx]
             preds = preds.reshape(preds.shape[0], -1)
             trues = trues.reshape(trues.shape[0], -1)
             preds_min = vali_data.inverse_transform_y(preds).reshape(-1)
@@ -225,7 +237,11 @@ class Exp_Forecast(Exp_Basic):
                     torch.cuda.synchronize()
                 if self.args.nonautoregressive:
                     batch_y = batch_y[:, -self.args.output_token_len:, :]
-                if self.args.covariate:
+                if self.args.data == 'LoginIntervalUser':
+                    target_idx = self._target_index(train_data)
+                    outputs = outputs[:, :, target_idx]
+                    batch_y = batch_y[:, :, target_idx]
+                elif self.args.covariate:
                     if self.args.last_token:
                         outputs = outputs[:, -self.args.output_token_len:, -1]
                         batch_y = batch_y[:, -self.args.output_token_len:, -1]
@@ -353,6 +369,10 @@ class Exp_Forecast(Exp_Basic):
                     pred_y = pred_y[:, :-self.args.output_token_len+dis, :]
                 batch_y = batch_y[:, -self.args.test_pred_len:, :].to(self.device)
                 
+                if self.args.data == 'LoginIntervalUser':
+                    target_idx = self._target_index(test_data)
+                    pred_y = pred_y[:, :, target_idx]
+                    batch_y = batch_y[:, :, target_idx]
                 outputs = pred_y.detach().cpu()
                 batch_y = batch_y.detach().cpu()
                 pred = outputs
@@ -387,10 +407,6 @@ class Exp_Forecast(Exp_Basic):
         print('preds shape:', preds.shape)
         print('trues shape:', trues.shape)
         if self.args.data == 'LoginIntervalUser':
-            if preds.ndim == 3:
-                preds = preds[:, :, -1]
-            if trues.ndim == 3:
-                trues = trues[:, :, -1]
             preds = preds.reshape(preds.shape[0], -1)
             trues = trues.reshape(trues.shape[0], -1)
             preds_min = test_data.inverse_transform_y(preds).reshape(-1)

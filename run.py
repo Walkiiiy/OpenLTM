@@ -26,8 +26,8 @@ if __name__ == '__main__':
     parser.add_argument('--time_col', type=str, default='date', help='time column for LoginIntervalUser')
     parser.add_argument('--feature_cols', type=str, default='', help='comma-separated feature columns for LoginIntervalUser')
     parser.add_argument('--drop_cols', type=str, default='user_id', help='comma-separated columns to drop for LoginIntervalUser')
-    parser.add_argument('--no_append_target_channel', action='store_false', dest='append_target_channel', help='disable appending dummy target channel for LoginIntervalUser')
-    parser.set_defaults(append_target_channel=True)
+    parser.add_argument('--append_target_channel', action='store_true', help='append a dummy target channel to inputs for LoginIntervalUser', default=False)
+    parser.add_argument('--target_feature', type=str, default='delta_min', help='target feature name for LoginIntervalUser metrics/loss')
     parser.add_argument('--output_root', type=str, default='./outputs', help='root directory for outputs')
     parser.add_argument('--user_id', type=str, default='', help='user id for outputs')
 

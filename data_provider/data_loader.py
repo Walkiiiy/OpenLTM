@@ -136,6 +136,7 @@ class LoginIntervalUser(Dataset):
         time_col='date',
         feature_cols=None,
         drop_cols='user_id',
+        append_target_channel=True,
     ):
         self.seq_len = size[0]
         self.input_token_len = size[1]
@@ -159,6 +160,7 @@ class LoginIntervalUser(Dataset):
                               for c in drop_cols.split(',') if c.strip()]
         else:
             self.drop_cols = list(drop_cols)
+        self.append_target_channel = append_target_channel
         self.__read_data__()
 
     def __read_data__(self):
@@ -218,6 +220,11 @@ class LoginIntervalUser(Dataset):
             self.scaler_y.fit(y_all[train_start:train_end])
             x_all = self.scaler_x.transform(x_all)
             y_all = self.scaler_y.transform(y_all)
+
+        if self.append_target_channel:
+            target_zeros = np.zeros_like(y_all)
+            x_all = np.concatenate([x_all, target_zeros], axis=1)
+            y_all = np.concatenate([np.zeros_like(x_all[:, :-1]), y_all], axis=1)
 
         if self.set_type == 0:
             start, end = train_start, train_end

@@ -45,6 +45,7 @@ def data_provider(args, flag):
             time_col=args.time_col,
             feature_cols=args.feature_cols,
             drop_cols=args.drop_cols,
+            append_target_channel=args.append_target_channel,
         )
     else:
         data_set = Data(

@@ -168,6 +168,10 @@ class Exp_Forecast(Exp_Basic):
         if self.args.data == 'LoginIntervalUser':
             preds = np.concatenate(preds, axis=0)
             trues = np.concatenate(trues, axis=0)
+            if preds.ndim == 3:
+                preds = preds[:, :, -1]
+            if trues.ndim == 3:
+                trues = trues[:, :, -1]
             preds = preds.reshape(preds.shape[0], -1)
             trues = trues.reshape(trues.shape[0], -1)
             preds_min = vali_data.inverse_transform_y(preds).reshape(-1)
@@ -383,6 +387,10 @@ class Exp_Forecast(Exp_Basic):
         print('preds shape:', preds.shape)
         print('trues shape:', trues.shape)
         if self.args.data == 'LoginIntervalUser':
+            if preds.ndim == 3:
+                preds = preds[:, :, -1]
+            if trues.ndim == 3:
+                trues = trues[:, :, -1]
             preds = preds.reshape(preds.shape[0], -1)
             trues = trues.reshape(trues.shape[0], -1)
             preds_min = test_data.inverse_transform_y(preds).reshape(-1)

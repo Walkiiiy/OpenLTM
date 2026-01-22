@@ -105,6 +105,7 @@ python -u run.py \
   --patience "$PATIENCE" \
   --num_workers 0 \
   --gpu 0 \
+  --covariate \
   --use_norm \
   --nonautoregressive \
   --adaptation \
